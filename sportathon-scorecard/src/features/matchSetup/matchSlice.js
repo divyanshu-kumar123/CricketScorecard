@@ -21,7 +21,7 @@ const initialState = {
         captianId: null
     },
     teamB: {
-        id: 'team_a',
+        id: 'team_b',
         name: '',
         player: [], //Array of objects  : {id, name, gender, isSpecial}
         captianId: null
@@ -55,6 +55,7 @@ const matchSlice = createSlice({
         startMatch: (state) => {
             state.status = 'in_progress';
         },
+        resetMatch: () => initialState,
     }
 })
 export const { 
@@ -63,6 +64,7 @@ export const {
   updateTeamA, 
   updateTeamB, 
   setTossResult, 
-  startMatch 
+  startMatch,
+  resetMatch
 } = matchSlice.actions;
 export default matchSlice.reducer;

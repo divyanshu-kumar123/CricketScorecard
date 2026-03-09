@@ -3,6 +3,8 @@ import MatchSetup from './pages/MatchSetup';
 import PlayerRegistration from './pages/PlayerRegistration';
 import Toss from './pages/Toss';
 import OpeningLineup from './pages/OpeningLineup';
+import LiveScorecard from './pages/LiveScorecard';
+import MatchSummary from './pages/MatchSummary';
 
 function App() {
 
@@ -12,7 +14,8 @@ function App() {
       <Route path="/registration" element={<PlayerRegistration />} />
       <Route path="/toss" element={<Toss />} />
       <Route path="/opening-lineup" element={<OpeningLineup />} />
-      <Route path="/live-score" element={<div>Live Scoring Dashboard Coming Soon</div>} />
+      <Route path="/live-score" element={<LiveScorecard />} />
+      <Route path="/match-summary" element={<MatchSummary />} />
     </Routes>
   )
 }

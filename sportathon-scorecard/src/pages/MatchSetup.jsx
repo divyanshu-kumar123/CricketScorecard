@@ -1,44 +1,46 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import {
-  setMatchDetails,
-  updateTeamA,
-  updateTeamB,
-} from "../features/matchSetup/matchSlice";
-import { Box, Button, TextField, Typography, Paper, Grid } from "@mui/material";
+import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { setMatchDetails, updateTeamA, updateTeamB, resetMatch } from '../features/matchSetup/matchSlice';
+import { resetInnings } from '../features/liveScoring/inningsSlice';
+import { resetEvents } from '../features/liveScoring/eventsSlice';
+import { Box, Button, TextField, Typography, Paper, Grid } from '@mui/material';
 
-function MatchSetup() {
+const MatchSetup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  //local state for forms
-  const [matchName, setMatchName] = useState("Match");
-  const [overs, setOvers] = useState(4);
+  // Wipe the old match data from the persistent cache on load
+  useEffect(() => {
+    dispatch(resetMatch());
+    dispatch(resetInnings());
+    dispatch(resetEvents());
+  }, [dispatch]);
+
+  const [matchName, setMatchName] = useState('Sportathon Final');
+  const [overs, setOvers] = useState(10);
   const [playersPerTeam, setPlayersPerTeam] = useState(5);
   const [specialPlayers, setSpecialPlayers] = useState(1);
-  const [teamAName, setTeamAName] = useState("");
-  const [teamBName, setTeamBName] = useState("");
+  const [teamAName, setTeamAName] = useState('');
+  const [teamBName, setTeamBName] = useState('');
 
   const handleSaveSetup = () => {
-    //dispatch the core match details
-    dispatch(
-      setMatchDetails({
-        matchName,
-        totalOver: overs,
-        playersPerTeam,
-        specialPlayersPerTeam: specialPlayers,
-        date: new Date().toISOString(),
-      }),
-    );
-    //dispatch only team name now. we will dispatch player details later
+    dispatch(setMatchDetails({ 
+      matchName, 
+      totalOvers: overs, 
+      playersPerTeam, 
+      specialPlayersPerTeam: specialPlayers,
+      date: new Date().toISOString() 
+    }));
+    
     dispatch(updateTeamA({ name: teamAName }));
     dispatch(updateTeamB({ name: teamBName }));
-    navigate("/registration");
+
+    navigate('/registration'); 
   };
 
   return (
-   <Box sx={{ padding: 4, maxWidth: 800, margin: '0 auto' }}>
+    <Box sx={{ padding: 4, maxWidth: 800, margin: '0 auto' }}>
       <Typography variant="h4" gutterBottom>Match Setup</Typography>
       
       <Paper sx={{ padding: 3, marginBottom: 3 }}>
@@ -76,6 +78,6 @@ function MatchSetup() {
       </Button>
     </Box>
   );
-}
+};
 
 export default MatchSetup;
