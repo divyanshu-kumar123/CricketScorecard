@@ -1,9 +1,11 @@
 import { combineReducers } from '@reduxjs/toolkit';
-import matchReducer from '../features/matchSetup/matchSlice.js'
+import matchReducer from '../features/matchSetup/matchSlice';
+import inningsReducer from '../features/liveScoring/inningsSlice';
 
 const rootReducer = combineReducers({
-    match : matchReducer
-  // We will add our actual slices here soon: matchSlice, eventsSlice, statsSlice
+  match: matchReducer,
+  innings: inningsReducer,
+  // events: eventsReducer (coming next)
 });
 
 export default rootReducer;
