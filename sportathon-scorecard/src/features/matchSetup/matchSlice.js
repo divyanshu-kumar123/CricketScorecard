@@ -6,7 +6,8 @@ const initialState = {
         date: '',
         totalOver: 4,
         ballsPerOver: 6,
-        playersPerTeam: 5
+        playersPerTeam: 5,
+        specialPlayersPerTeam: 1,
     },
     specificRules: { //especially for female player
         specialPlayerMultiplier: 2,

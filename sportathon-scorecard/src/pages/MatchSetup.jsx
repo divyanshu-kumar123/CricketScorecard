@@ -1,30 +1,44 @@
-import React, {useState} from 'react'
-import { useDispatch } from 'react-redux'
-import { useNavigate } from 'react-router-dom';
-import { setMatchDetails, updateTeamA, updateTeamB } from '../features/matchSetup/matchSlice';
-import { Box, Button, TextField, Typography, Paper, Grid } from '@mui/material';
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  setMatchDetails,
+  updateTeamA,
+  updateTeamB,
+} from "../features/matchSetup/matchSlice";
+import { Box, Button, TextField, Typography, Paper, Grid } from "@mui/material";
 
 function MatchSetup() {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-    //local state for forms
-    const [matchName, setMatchName] = useState('Match');
-    const [overs, setOvers] = useState(4);
-    const [teamAName, setTeamAName] = useState('');
-    const [teamBName, setTeamBName] = useState('');
+  //local state for forms
+  const [matchName, setMatchName] = useState("Match");
+  const [overs, setOvers] = useState(4);
+  const [playersPerTeam, setPlayersPerTeam] = useState(5);
+  const [specialPlayers, setSpecialPlayers] = useState(1);
+  const [teamAName, setTeamAName] = useState("");
+  const [teamBName, setTeamBName] = useState("");
 
-    const handleSaveSetup = () => {
-        //dispatch the core match details
-        dispatch(setMatchDetails({matchName, totalOver : overs, date : new Date().toISOString() }))
-        //dispatch only team name now. we will dispatch player details later
-        dispatch(updateTeamA({name : teamAName}));
-        dispatch(updateTeamB({name : teamBName}));
-        navigate('/toss');
-    }
- 
+  const handleSaveSetup = () => {
+    //dispatch the core match details
+    dispatch(
+      setMatchDetails({
+        matchName,
+        totalOver: overs,
+        playersPerTeam,
+        specialPlayersPerTeam: specialPlayers,
+        date: new Date().toISOString(),
+      }),
+    );
+    //dispatch only team name now. we will dispatch player details later
+    dispatch(updateTeamA({ name: teamAName }));
+    dispatch(updateTeamB({ name: teamBName }));
+    navigate("/registration");
+  };
+
   return (
-    <Box sx={{ padding: 4, maxWidth: 800, margin: '0 auto' }}>
+   <Box sx={{ padding: 4, maxWidth: 800, margin: '0 auto' }}>
       <Typography variant="h4" gutterBottom>Match Setup</Typography>
       
       <Paper sx={{ padding: 3, marginBottom: 3 }}>
@@ -36,9 +50,14 @@ function MatchSetup() {
           <Grid item xs={12} sm={6}>
             <TextField fullWidth type="number" label="Total Overs" value={overs} onChange={(e) => setOvers(Number(e.target.value))} />
           </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField fullWidth type="number" label="Total Players per Team" value={playersPerTeam} onChange={(e) => setPlayersPerTeam(Number(e.target.value))} />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField fullWidth type="number" label="Special Players per Team" value={specialPlayers} onChange={(e) => setSpecialPlayers(Number(e.target.value))} />
+          </Grid>
         </Grid>
       </Paper>
-      
 
       <Paper sx={{ padding: 3, marginBottom: 3 }}>
         <Typography variant="h6" gutterBottom>Teams</Typography>
@@ -56,7 +75,7 @@ function MatchSetup() {
         Proceed to Player Registration
       </Button>
     </Box>
-  )
+  );
 }
 
-export default MatchSetup
+export default MatchSetup;
