@@ -4,16 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import { setInningsTeams, setActivePlayers } from '../features/liveScoring/inningsSlice';
 import { startMatch } from '../features/matchSetup/matchSlice';
 import { Box, Button, Typography, Paper, MenuItem, TextField, Alert } from '@mui/material';
-//optional to log in console
-import { store } from '../store/store';
 
 const OpeningLineup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   
-  const { teamA, teamB, toss } = useSelector((state) => state.match);
+  // NEW: Pulling specialRules from Redux for dynamic validation
+  const { teamA, teamB, toss, specialRules } = useSelector((state) => state.match);
 
-  // Derive batting and bowling teams dynamically based on the toss
   const battingTeam = toss.decision === 'bat' 
     ? (toss.winner === teamA.id ? teamA : teamB) 
     : (toss.winner === teamA.id ? teamB : teamA);
@@ -25,14 +23,14 @@ const OpeningLineup = () => {
   const [bowler, setBowler] = useState('');
   const [error, setError] = useState('');
 
-  // Auto-select the special players to enforce corporate rules
+  // Auto-select the first special player as a convenience, but leave the dropdown unlocked so it can be changed
   useEffect(() => {
-    const specialBatter = battingTeam.players.find(p => p.isSpecial);
-    const specialBowler = bowlingTeam.players.find(p => p.isSpecial);
+    const specialBatters = battingTeam.players.filter(p => p.isSpecial);
+    const specialBowlers = bowlingTeam.players.filter(p => p.isSpecial);
     
-    if (specialBatter) setStriker(specialBatter.id);
-    if (specialBowler) setBowler(specialBowler.id);
-  }, [battingTeam, bowlingTeam]);
+    if (specialBatters.length > 0 && !striker) setStriker(specialBatters[0].id);
+    if (specialBowlers.length > 0 && !bowler) setBowler(specialBowlers[0].id);
+  }, [battingTeam, bowlingTeam]); // Intentionally omitting striker/bowler to prevent infinite loops
 
   const handleStartMatch = () => {
     if (!striker || !nonStriker || !bowler) {
@@ -44,16 +42,26 @@ const OpeningLineup = () => {
       return;
     }
 
-    // Save active teams and players to Redux
+    // NEW: Dynamic Validation based on Match Setup rules
+    const selectedStriker = battingTeam.players.find(p => p.id === striker);
+    const selectedBowler = bowlingTeam.players.find(p => p.id === bowler);
+
+    // If the rules dictate a special player MUST bat first, enforce it here
+    if (specialRules?.mandatoryFirstOverBat && !selectedStriker.isSpecial) {
+      setError('Match rules dictate a Special Player must take the strike for the first over.');
+      return;
+    }
+
+    // If the rules dictate a special player MUST bowl first, enforce it here
+    if (specialRules?.mandatoryFirstOverBowl && !selectedBowler.isSpecial) {
+      setError('Match rules dictate a Special Player must bowl the first over.');
+      return;
+    }
+
     dispatch(setInningsTeams({ battingTeamId: battingTeam.id, bowlingTeamId: bowlingTeam.id }));
     dispatch(setActivePlayers({ strikerId: striker, nonStrikerId: nonStriker, bowlerId: bowler }));
     dispatch(startMatch());
 
-    // --- TEST LOG ---
-    console.log("FINAL SETUP STATE:", store.getState());
-    // ----------------
-
-    // Navigate to the main scoring dashboard
     navigate('/live-score');
   };
 
@@ -67,11 +75,9 @@ const OpeningLineup = () => {
         <Typography variant="h6" color="primary" gutterBottom>
           Batting: {battingTeam.name}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          * The Special Player is locked as the opening Striker.
-        </Typography>
         
-        <TextField select fullWidth label="Striker" value={striker} sx={{ mb: 2 }} disabled>
+        {/* DROPDOWNS ARE NOW UNLOCKED */}
+        <TextField select fullWidth label="Striker" value={striker} onChange={(e) => setStriker(e.target.value)} sx={{ mb: 2 }}>
           {battingTeam.players.map(p => (
             <MenuItem key={p.id} value={p.id}>{p.name} {p.isSpecial ? '(Special)' : ''}</MenuItem>
           ))}
@@ -79,10 +85,7 @@ const OpeningLineup = () => {
 
         <TextField select fullWidth label="Non-Striker" value={nonStriker} onChange={(e) => setNonStriker(e.target.value)}>
           {battingTeam.players.map(p => (
-             // Disable the special player from being selected as non-striker
-            <MenuItem key={p.id} value={p.id} disabled={p.isSpecial}>
-              {p.name}
-            </MenuItem>
+            <MenuItem key={p.id} value={p.id}>{p.name} {p.isSpecial ? '(Special)' : ''}</MenuItem>
           ))}
         </TextField>
       </Paper>
@@ -91,11 +94,9 @@ const OpeningLineup = () => {
         <Typography variant="h6" color="secondary" gutterBottom>
           Bowling: {bowlingTeam.name}
         </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          * The Special Player is locked as the opening Bowler.
-        </Typography>
 
-        <TextField select fullWidth label="Bowler" value={bowler} disabled>
+        {/* DROPDOWN IS NOW UNLOCKED */}
+        <TextField select fullWidth label="Bowler" value={bowler} onChange={(e) => setBowler(e.target.value)}>
           {bowlingTeam.players.map(p => (
             <MenuItem key={p.id} value={p.id}>{p.name} {p.isSpecial ? '(Special)' : ''}</MenuItem>
           ))}

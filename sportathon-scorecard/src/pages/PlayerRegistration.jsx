@@ -1,37 +1,34 @@
-import React, { useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { updateTeamA, updateTeamB } from '../features/matchSetup/matchSlice';
-import { Box, Button, TextField, Typography, Paper, Grid, MenuItem, Alert } from '@mui/material';
+import { Box, Button, TextField, Typography, Paper, Grid, MenuItem, Alert, FormControlLabel, Switch } from '@mui/material';
 
-function PlayerRegistration() {
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+const PlayerRegistration = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  
+  const { matchDetails, teamA, teamB } = useSelector((state) => state.match);
+  const { playersPerTeam, specialPlayersPerTeam } = matchDetails;
 
-    //pull the team data from store
-    const {matchDetails, teamA, teamB} = useSelector((state)=> state.match);
-    const {playersPerTeam, specialPlayersPerTeam} = matchDetails;
+  const generateInitialRoster = () => {
+    return Array.from({ length: playersPerTeam }, (_, index) => {
+      const isSpecial = index < specialPlayersPerTeam; 
+      return {
+        id: uuidv4(),
+        name: '',
+        gender: isSpecial ? 'Female' : 'Male', // This is now just a default, not a locked value
+        isSpecial: isSpecial,
+      };
+    });
+  };
 
-    //dynamically generate roaster based on store
-    const generateInitialRoster = () => {
-        return Array.from({length : playersPerTeam}, (_, index) => {
-            const isSpecial = index < specialPlayersPerTeam;
+  const [rosterA, setRosterA] = useState(generateInitialRoster());
+  const [rosterB, setRosterB] = useState(generateInitialRoster());
+  const [error, setError] = useState('');
 
-            return {
-                id : uuidv4(),
-                name : '',
-                gender : isSpecial ? 'Female' : 'Male',
-                isSpecial : isSpecial
-            }
-        })
-    }
-
-    const [rosterA, setRosterA] = useState(generateInitialRoster());
-    const [rosterB, setRosterB] = useState(generateInitialRoster());
-    const [error, setError] = useState('');
-
-    const handlePlayerChange = (team, index, field, value) => {
+  const handlePlayerChange = (team, index, field, value) => {
     if (team === 'A') {
       const newRoster = [...rosterA];
       newRoster[index][field] = value;
@@ -44,7 +41,6 @@ function PlayerRegistration() {
   };
 
   const handleSaveRegistration = () => {
-    // Basic validation to ensure all names are filled out
     const isRosterAValid = rosterA.every(p => p.name.trim() !== '');
     const isRosterBValid = rosterB.every(p => p.name.trim() !== '');
 
@@ -53,13 +49,20 @@ function PlayerRegistration() {
       return;
     }
 
-    // Dispatch the full rosters to Redux
+    // Dynamic Validation: Ensure they didn't select too many or too few special players
+    const specialCountA = rosterA.filter(p => p.isSpecial).length;
+    const specialCountB = rosterB.filter(p => p.isSpecial).length;
+
+    if (specialCountA !== specialPlayersPerTeam || specialCountB !== specialPlayersPerTeam) {
+      setError(`Match rules require exactly ${specialPlayersPerTeam} special player(s) per team. Team A has ${specialCountA}, Team B has ${specialCountB}.`);
+      return;
+    }
+
     dispatch(updateTeamA({ players: rosterA }));
     dispatch(updateTeamB({ players: rosterB }));
 
-    // Proceed to the Toss
     navigate('/toss');
-  }
+  };
 
   const renderTeamForm = (teamName, roster, teamKey) => (
     <Paper sx={{ padding: 3, marginBottom: 4 }}>
@@ -67,12 +70,12 @@ function PlayerRegistration() {
         {teamName || `Team ${teamKey}`} Roster
       </Typography>
       <Typography variant="body2" sx={{ marginBottom: 2, color: 'text.secondary' }}>
-        * Player 1 is the designated Special Player (Female) who will bat and bowl the first over.
+        * Please toggle the switch to assign the Special Player role.
       </Typography>
       
       {roster.map((player, index) => (
-        <Grid container spacing={2} key={player.id} sx={{ marginBottom: 2 }}>
-          <Grid item xs={12} sm={8}>
+        <Grid container spacing={2} key={player.id} sx={{ marginBottom: 2, alignItems: 'center' }}>
+          <Grid item xs={12} sm={5}>
             <TextField
               fullWidth
               label={`Player ${index + 1} Name`}
@@ -87,11 +90,24 @@ function PlayerRegistration() {
               fullWidth
               label="Gender"
               value={player.gender}
-              disabled // Locked to enforce your corporate rules
+              onChange={(e) => handlePlayerChange(teamKey, index, 'gender', e.target.value)}
             >
-              <MenuItem value="Female">Female (Special)</MenuItem>
+              <MenuItem value="Female">Female</MenuItem>
               <MenuItem value="Male">Male</MenuItem>
+              <MenuItem value="Other">Other</MenuItem>
             </TextField>
+          </Grid>
+          <Grid item xs={12} sm={3}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={player.isSpecial}
+                  onChange={(e) => handlePlayerChange(teamKey, index, 'isSpecial', e.target.checked)}
+                  color="secondary"
+                />
+              }
+              label="Special Player"
+            />
           </Grid>
         </Grid>
       ))}
@@ -111,7 +127,7 @@ function PlayerRegistration() {
         Lock In Teams & Proceed to Toss
       </Button>
     </Box>
-  )
-}
+  );
+};
 
-export default PlayerRegistration
+export default PlayerRegistration;

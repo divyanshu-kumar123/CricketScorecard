@@ -18,7 +18,7 @@ const MatchSetup = () => {
   }, [dispatch]);
 
   const [matchName, setMatchName] = useState('Sportathon Final');
-  const [overs, setOvers] = useState(10);
+  const [overs, setOvers] = useState(4);
   const [playersPerTeam, setPlayersPerTeam] = useState(5);
   const [specialPlayers, setSpecialPlayers] = useState(1);
   const [teamAName, setTeamAName] = useState('');
