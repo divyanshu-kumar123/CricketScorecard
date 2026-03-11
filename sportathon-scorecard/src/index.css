@@ -1,0 +1,23 @@
+/* Custom Image Loader */
+.loader-img {
+  width: 200px;
+  animation: blurLoader 1.8s infinite ease-in-out;
+}
+
+@keyframes blurLoader {
+  0% {
+    filter: blur(6px);
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+  50% {
+    filter: blur(0px);
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    filter: blur(6px);
+    opacity: 0.6;
+    transform: scale(0.95);
+  }
+}

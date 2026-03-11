@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Typography, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Button, Grid, Divider } from '@mui/material';
+import { generateExcelScorecard } from '../utils/exportToExcel.js';
 
 const MatchSummary = () => {
   const { matchDetails, teamA, teamB } = useSelector((state) => state.match);
@@ -184,12 +185,21 @@ const MatchSummary = () => {
         </Grid>
       </Grid>
 
-      <Box sx={{ mt: 4, textAlign: 'center' }}>
-        <Button variant="contained" color="secondary" size="large" onClick={handleExportData}>
-          Download Raw Match Data (JSON)
+     <Box sx={{ mt: 4, textAlign: 'center', display: 'flex', justifyContent: 'center', gap: 2 }}>
+        <Button variant="outlined" color="secondary" size="large" onClick={handleExportData}>
+          Download Raw JSON
+        </Button>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          size="large" 
+          onClick={() => generateExcelScorecard(matchDetails, ballByBallHistory, teamA, teamB)}
+        >
+          Download Excel Spreadsheet
         </Button>
       </Box>
     </Box>
+
   );
 };
 
