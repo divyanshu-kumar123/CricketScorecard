@@ -10,7 +10,6 @@ const MatchSetup = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  // Wipe the old match data from the persistent cache on load
   useEffect(() => {
     dispatch(resetMatch());
     dispatch(resetInnings());
@@ -21,6 +20,7 @@ const MatchSetup = () => {
   const [overs, setOvers] = useState(4);
   const [playersPerTeam, setPlayersPerTeam] = useState(5);
   const [specialPlayers, setSpecialPlayers] = useState(1);
+  const [bowlerLimit, setBowlerLimit] = useState(2); // NEW STATE
   const [teamAName, setTeamAName] = useState('');
   const [teamBName, setTeamBName] = useState('');
 
@@ -30,6 +30,7 @@ const MatchSetup = () => {
       totalOvers: overs, 
       playersPerTeam, 
       specialPlayersPerTeam: specialPlayers,
+      bowlerOverLimit: bowlerLimit, // SAVE TO REDUX
       date: new Date().toISOString() 
     }));
     
@@ -52,11 +53,14 @@ const MatchSetup = () => {
           <Grid item xs={12} sm={6}>
             <TextField fullWidth type="number" label="Total Overs" value={overs} onChange={(e) => setOvers(Number(e.target.value))} />
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField fullWidth type="number" label="Total Players per Team" value={playersPerTeam} onChange={(e) => setPlayersPerTeam(Number(e.target.value))} />
+          <Grid item xs={12} sm={4}>
+            <TextField fullWidth type="number" label="Players per Team" value={playersPerTeam} onChange={(e) => setPlayersPerTeam(Number(e.target.value))} />
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField fullWidth type="number" label="Special Players per Team" value={specialPlayers} onChange={(e) => setSpecialPlayers(Number(e.target.value))} />
+          <Grid item xs={12} sm={4}>
+            <TextField fullWidth type="number" label="Min. Special Players" value={specialPlayers} onChange={(e) => setSpecialPlayers(Number(e.target.value))} />
+          </Grid>
+          <Grid item xs={12} sm={4}>
+            <TextField fullWidth type="number" label="Bowler Over Limit" value={bowlerLimit} onChange={(e) => setBowlerLimit(Number(e.target.value))} />
           </Grid>
         </Grid>
       </Paper>
@@ -73,7 +77,7 @@ const MatchSetup = () => {
         </Grid>
       </Paper>
 
-      <Button variant="contained" color="primary" size="large" fullWidth onClick={handleSaveSetup}>
+      <Button variant="contained" color="primary" size="large" fullWidth onClick={handleSaveSetup} disabled={!teamAName || !teamBName}>
         Proceed to Player Registration
       </Button>
     </Box>

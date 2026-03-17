@@ -18,7 +18,7 @@ const PlayerRegistration = () => {
       return {
         id: uuidv4(),
         name: '',
-        gender: isSpecial ? 'Female' : 'Male', // This is now just a default, not a locked value
+        gender: isSpecial ? 'Female' : 'Male',
         isSpecial: isSpecial,
       };
     });
@@ -49,12 +49,12 @@ const PlayerRegistration = () => {
       return;
     }
 
-    // Dynamic Validation: Ensure they didn't select too many or too few special players
     const specialCountA = rosterA.filter(p => p.isSpecial).length;
     const specialCountB = rosterB.filter(p => p.isSpecial).length;
 
-    if (specialCountA !== specialPlayersPerTeam || specialCountB !== specialPlayersPerTeam) {
-      setError(`Match rules require exactly ${specialPlayersPerTeam} special player(s) per team. Team A has ${specialCountA}, Team B has ${specialCountB}.`);
+    // THE FIX: Changed !== to < so it's a minimum requirement, not a hard limit!
+    if (specialCountA < specialPlayersPerTeam || specialCountB < specialPlayersPerTeam) {
+      setError(`Match rules require AT LEAST ${specialPlayersPerTeam} special player(s) per team. Team A has ${specialCountA}, Team B has ${specialCountB}.`);
       return;
     }
 
@@ -69,29 +69,14 @@ const PlayerRegistration = () => {
       <Typography variant="h6" gutterBottom color="primary">
         {teamName || `Team ${teamKey}`} Roster
       </Typography>
-      <Typography variant="body2" sx={{ marginBottom: 2, color: 'text.secondary' }}>
-        * Please toggle the switch to assign the Special Player role.
-      </Typography>
       
       {roster.map((player, index) => (
         <Grid container spacing={2} key={player.id} sx={{ marginBottom: 2, alignItems: 'center' }}>
           <Grid item xs={12} sm={5}>
-            <TextField
-              fullWidth
-              label={`Player ${index + 1} Name`}
-              value={player.name}
-              onChange={(e) => handlePlayerChange(teamKey, index, 'name', e.target.value)}
-              required
-            />
+            <TextField fullWidth label={`Player ${index + 1} Name`} value={player.name} onChange={(e) => handlePlayerChange(teamKey, index, 'name', e.target.value)} required />
           </Grid>
           <Grid item xs={12} sm={4}>
-            <TextField
-              select
-              fullWidth
-              label="Gender"
-              value={player.gender}
-              onChange={(e) => handlePlayerChange(teamKey, index, 'gender', e.target.value)}
-            >
+            <TextField select fullWidth label="Gender" value={player.gender} onChange={(e) => handlePlayerChange(teamKey, index, 'gender', e.target.value)}>
               <MenuItem value="Female">Female</MenuItem>
               <MenuItem value="Male">Male</MenuItem>
               <MenuItem value="Other">Other</MenuItem>
@@ -99,13 +84,7 @@ const PlayerRegistration = () => {
           </Grid>
           <Grid item xs={12} sm={3}>
             <FormControlLabel
-              control={
-                <Switch
-                  checked={player.isSpecial}
-                  onChange={(e) => handlePlayerChange(teamKey, index, 'isSpecial', e.target.checked)}
-                  color="secondary"
-                />
-              }
+              control={<Switch checked={player.isSpecial} onChange={(e) => handlePlayerChange(teamKey, index, 'isSpecial', e.target.checked)} color="secondary" />}
               label="Special Player"
             />
           </Grid>
@@ -117,12 +96,9 @@ const PlayerRegistration = () => {
   return (
     <Box sx={{ padding: 4, maxWidth: 900, margin: '0 auto' }}>
       <Typography variant="h4" gutterBottom>Player Registration</Typography>
-      
       {error && <Alert severity="error" sx={{ marginBottom: 3 }}>{error}</Alert>}
-
       {renderTeamForm(teamA.name, rosterA, 'A')}
       {renderTeamForm(teamB.name, rosterB, 'B')}
-
       <Button variant="contained" color="success" size="large" fullWidth onClick={handleSaveRegistration}>
         Lock In Teams & Proceed to Toss
       </Button>
