@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { resetMatch } from '../features/matchSetup/matchSlice';
 import { resetInnings } from '../features/liveScoring/inningsSlice';
 import { resetEvents } from '../features/liveScoring/eventsSlice';
-
+// Divyanshu
 const GlobalHeader = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const dispatch = useDispatch();
