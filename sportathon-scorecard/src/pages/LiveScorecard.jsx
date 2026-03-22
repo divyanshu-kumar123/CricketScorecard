@@ -26,7 +26,7 @@ const LiveScorecard = () => {
   const [wicketType, setWicketType] = useState('bowled');
   const [playerOutId, setPlayerOutId] = useState('');
   const [nextBatterId, setNextBatterId] = useState('');
-  const [runOutRuns, setRunOutRuns] = useState(0); // NEW: For Run Out/Wicket with completed runs
+  const [runOutRuns, setRunOutRuns] = useState(0); 
 
   const [endOfOverModalOpen, setEndOfOverModalOpen] = useState(false);
   const [nextBowlerId, setNextBowlerId] = useState('');
@@ -37,17 +37,18 @@ const LiveScorecard = () => {
 
   const [endOfInningsModalOpen, setEndOfInningsModalOpen] = useState(false);
 
-  // THE FIX: Retired players are NOT included in the outPlayers list so they can bat again!
   const currentInningsEvents = ballByBallHistory.filter(ball => ball.innings === currentInnings);
+  
+  // Retired players do not count as "Out", ensuring they can bat again later
   const outPlayers = currentInningsEvents
     .filter(ball => ball.isWicket && ball.wicketDetails.type !== 'retiredNotOut')
     .map(ball => ball.wicketDetails.playerOutId);
 
   const availableBatters = battingTeam?.players?.filter(p => p.id !== strikerId && p.id !== nonStrikerId && !outPlayers.includes(p.id)) || [];
 
-  // THE FIX: Enforce Bowler Limits
   const getBowlerOvers = (id) => {
-    const balls = currentInningsEvents.filter(b => b.bowlerId === id && (!b.extras.type || b.extras.type === 'bye' || b.extras.type === 'legBye')).length;
+    // Only count actual deliveries, ignoring retirements
+    const balls = currentInningsEvents.filter(b => b.bowlerId === id && b.isDelivery !== false && (!b.extras.type || b.extras.type === 'bye' || b.extras.type === 'legBye')).length;
     return Math.floor(balls / (matchDetails.ballsPerOver || 6));
   };
   const availableBowlers = bowlingTeam?.players?.filter(p => p.id !== bowlerId && getBowlerOvers(p.id) < (matchDetails.bowlerOverLimit || 99)) || [];
@@ -55,7 +56,9 @@ const LiveScorecard = () => {
   const totalRuns = currentInningsEvents.reduce((sum, ball) => sum + ball.totalRuns, 0);
   const totalWickets = currentInningsEvents.filter(ball => ball.isWicket && ball.wicketDetails.type !== 'retiredNotOut').length;
   
-  const legalDeliveries = currentInningsEvents.filter(ball => !ball.extras.type || ball.extras.type === 'bye' || ball.extras.type === 'legBye').length;
+  // Exclude non-delivery events (like retirements) from the ball count
+  const actualDeliveries = currentInningsEvents.filter(ball => ball.isDelivery !== false);
+  const legalDeliveries = actualDeliveries.filter(ball => !ball.extras.type || ball.extras.type === 'bye' || ball.extras.type === 'legBye').length;
   const displayOvers = `${Math.floor(legalDeliveries / (matchDetails.ballsPerOver || 6))}.${legalDeliveries % (matchDetails.ballsPerOver || 6)}`;
 
   const ballsPerOver = matchDetails?.ballsPerOver || 6;
@@ -63,14 +66,16 @@ const LiveScorecard = () => {
   const safeCurrentOver = currentOver || 0; 
   const totalTargetOvers = matchDetails?.totalOvers || 10;
 
-  // NEW: Current Over Timeline Extraction
+  // Visual Timeline Logic
   const getOverTimeline = () => {
     const oversArray = [];
     let currentArray = [];
     let legals = 0;
     currentInningsEvents.forEach(ball => {
       currentArray.push(ball);
-      if (!ball.extras.type || ball.extras.type === 'bye' || ball.extras.type === 'legBye') legals++;
+      if (ball.isDelivery !== false) {
+        if (!ball.extras.type || ball.extras.type === 'bye' || ball.extras.type === 'legBye') legals++;
+      }
       if (legals === ballsPerOver) { oversArray.push(currentArray); currentArray = []; legals = 0; }
     });
     if (currentArray.length > 0) oversArray.push(currentArray);
@@ -78,10 +83,7 @@ const LiveScorecard = () => {
   };
   const currentOverTimeline = getOverTimeline();
 
-  // Target Logic
-  let targetScore = null;
-  let runsNeeded = null;
-  let ballsRemaining = null;
+  let targetScore = null; let runsNeeded = null; let ballsRemaining = null;
   if (currentInnings === 2) {
     const firstInningsEvents = ballByBallHistory.filter(ball => ball.innings === 1);
     targetScore = firstInningsEvents.reduce((sum, ball) => sum + ball.totalRuns, 0) + 1;
@@ -95,28 +97,30 @@ const LiveScorecard = () => {
 
   useEffect(() => {
     if (isAllOut || (isOversDone && completedOvers > 0) || isTargetReached) {
-      setEndOfInningsModalOpen(true);
-      setEndOfOverModalOpen(false); 
+      setEndOfInningsModalOpen(true); setEndOfOverModalOpen(false); 
     } else if (completedOvers > safeCurrentOver && completedOvers < totalTargetOvers) {
       setEndOfOverModalOpen(true);
     }
   }, [completedOvers, safeCurrentOver, totalTargetOvers, isAllOut, isOversDone, isTargetReached]);
 
-  // LIVE STATS CALCULATOR
   const generateLiveStats = () => {
-    const batting = {};
-    const bowling = {};
+    const batting = {}; const bowling = {};
     currentInningsEvents.forEach(ball => {
       if (!batting[ball.strikerId]) batting[ball.strikerId] = { runs: 0, balls: 0, fours: 0, sixes: 0 };
-      if (ball.extras.type !== 'wide') batting[ball.strikerId].balls += 1;
-      if (!ball.extras.type) {
-        batting[ball.strikerId].runs += ball.totalRuns;
-        if (ball.runsBat === 4) batting[ball.strikerId].fours += 1;
-        if (ball.runsBat === 6) batting[ball.strikerId].sixes += 1;
-      }
       if (!bowling[ball.bowlerId]) bowling[ball.bowlerId] = { balls: 0, runsConceded: 0, wickets: 0 };
-      if (ball.extras.type !== 'wide' && ball.extras.type !== 'noBall') bowling[ball.bowlerId].balls += 1;
-      if (ball.extras.type !== 'bye' && ball.extras.type !== 'legBye') bowling[ball.bowlerId].runsConceded += ball.totalRuns;
+      
+      // Ignore retirements for batter/bowler ball counts
+      if (ball.isDelivery !== false) {
+        if (ball.extras.type !== 'wide') batting[ball.strikerId].balls += 1;
+        if (!ball.extras.type) {
+          batting[ball.strikerId].runs += ball.totalRuns;
+          if (ball.runsBat === 4) batting[ball.strikerId].fours += 1;
+          if (ball.runsBat === 6) batting[ball.strikerId].sixes += 1;
+        }
+        if (ball.extras.type !== 'wide' && ball.extras.type !== 'noBall') bowling[ball.bowlerId].balls += 1;
+        if (ball.extras.type !== 'bye' && ball.extras.type !== 'legBye') bowling[ball.bowlerId].runsConceded += ball.totalRuns;
+      }
+      
       if (ball.isWicket && ball.wicketDetails.type !== 'runOut' && ball.wicketDetails.type !== 'retiredNotOut') bowling[ball.bowlerId].wickets += 1;
     });
     return { batting, bowling };
@@ -131,6 +135,7 @@ const LiveScorecard = () => {
       strikerId: striker.id, nonStrikerId: nonStriker.id, bowlerId: bowler.id,
       runsBat, multiplierApplied: multiplier, totalRuns: finalRuns,
       extras: { type: null, runs: 0 }, isWicket: false, wicketDetails: null,
+      isDelivery: true
     }));
     if (runsBat % 2 !== 0) dispatch(changeStrike());
   };
@@ -143,6 +148,7 @@ const LiveScorecard = () => {
       strikerId: striker.id, nonStrikerId: nonStriker.id, bowlerId: bowler.id,
       runsBat: 0, multiplierApplied: 1, totalRuns: totalPenalty,
       extras: { type: extraType, runs: totalPenalty }, isWicket: false, wicketDetails: null,
+      isDelivery: true
     }));
     setExtrasModalOpen(false); setExtraRuns(0);
     if (Number(extraRuns) % 2 !== 0) dispatch(changeStrike());
@@ -152,23 +158,26 @@ const LiveScorecard = () => {
     const isLastWicket = availableBatters.length === 0;
     if (!playerOutId || (!nextBatterId && !isLastWicket && wicketType !== 'retiredNotOut')) return;
 
-    // Handle Run Out Runs
-    const addedRuns = Number(runOutRuns);
+    const isRetirement = wicketType === 'retiredNotOut';
+    const addedRuns = wicketType === 'runOut' ? Number(runOutRuns) : 0;
+    const multiplier = (striker.isSpecial && !isRetirement) ? (specialRules?.specialPlayerMultiplier || 2) : 1;
+    const finalRuns = addedRuns * multiplier;
 
     dispatch(recordDelivery({
       id: uuidv4(), innings: currentInnings, overNumber: displayOvers,
       strikerId: striker.id, nonStrikerId: nonStriker.id, bowlerId: bowler.id,
-      runsBat: addedRuns, multiplierApplied: 1, totalRuns: addedRuns,
+      runsBat: addedRuns, multiplierApplied: multiplier, totalRuns: finalRuns,
       extras: { type: null, runs: 0 }, isWicket: true,
       wicketDetails: { type: wicketType, playerOutId: playerOutId },
+      isDelivery: !isRetirement // THE FIX: Retirements consume 0 balls
     }));
     
-    if (!isLastWicket || wicketType === 'retiredNotOut') {
+    // If they completed an odd number of runs before run out, they crossed ends
+    if (addedRuns > 0 && addedRuns % 2 !== 0) dispatch(changeStrike());
+
+    if (!isLastWicket || isRetirement) {
       dispatch(changeBatter({ outBatterId: playerOutId, inBatterId: nextBatterId }));
     }
-
-    // If they completed an odd number of runs before the run out, swap strike
-    if (addedRuns > 0 && addedRuns % 2 !== 0) dispatch(changeStrike());
 
     setWicketModalOpen(false); setPlayerOutId(''); setNextBatterId(''); setRunOutRuns(0); setWicketType('bowled');
   };
@@ -181,11 +190,8 @@ const LiveScorecard = () => {
 
   const handleInningsComplete = () => {
     setEndOfInningsModalOpen(false);
-    if (currentInnings === 1) {
-      dispatch(startNextInnings()); navigate('/opening-lineup'); 
-    } else {
-      navigate('/match-summary');
-    }
+    if (currentInnings === 1) { dispatch(startNextInnings()); navigate('/opening-lineup'); } 
+    else { navigate('/match-summary'); }
   };
 
   if (!striker || !bowler) return <Typography>Loading Match Data...</Typography>;
@@ -203,17 +209,26 @@ const LiveScorecard = () => {
         )}
       </Paper>
 
-      {/* NEW: Interactive Current Over Timeline */}
       <Paper sx={{ p: 2, mb: 2 }}>
         <Typography variant="subtitle2" color="text.secondary">Current Over</Typography>
         <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', py: 1 }}>
           {currentOverTimeline.map((ball, idx) => {
             let label = ball.totalRuns; let color = '#e0e0e0'; let txt = '#000';
-            if (ball.isWicket) { label = 'W'; color = '#d32f2f'; txt = '#fff'; }
+            
+            if (ball.isDelivery === false && ball.wicketDetails?.type === 'retiredNotOut') {
+              label = 'RTD'; color = '#757575'; txt = '#fff';
+            } else if (ball.isWicket) {
+              if (ball.wicketDetails?.type === 'runOut' && ball.runsBat > 0) {
+                label = `${ball.runsBat}+W`; color = '#d32f2f'; txt = '#fff'; // Run+Wicket Graphic
+              } else {
+                label = 'W'; color = '#d32f2f'; txt = '#fff';
+              }
+            }
             else if (ball.extras.type) { label = `${ball.totalRuns}${ball.extras.type[0].toUpperCase()}`; color = '#ed6c02'; txt = '#fff'; }
             else if (ball.runsBat === 4) { label = '4'; color = '#0288d1'; txt = '#fff'; }
             else if (ball.runsBat === 6) { label = '6'; color = '#9c27b0'; txt = '#fff'; }
             else if (ball.totalRuns === 0) { label = '0'; color = '#9e9e9e'; txt = '#fff'; }
+            
             return <Avatar key={idx} sx={{ bgcolor: color, color: txt, width: 36, height: 36, fontWeight: 'bold' }}>{label}</Avatar>;
           })}
           {currentOverTimeline.length === 0 && <Typography variant="body2" color="text.secondary">Waiting for first delivery...</Typography>}
@@ -225,7 +240,6 @@ const LiveScorecard = () => {
           <Paper sx={{ padding: 2, height: '100%' }}>
             <Typography variant="h6" color="primary">Batters</Typography>
             <Divider sx={{ my: 1 }} />
-            {/* NEW: LIVE STATS ON ACTIVE PLAYERS */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
               <Typography variant="body1" fontWeight="bold">▶ {striker.name} {striker.isSpecial?'(S)':''}</Typography>
               <Typography variant="body1" fontWeight="bold">{liveStats.batting[striker.id]?.runs || 0} ({liveStats.batting[striker.id]?.balls || 0})</Typography>
@@ -255,9 +269,7 @@ const LiveScorecard = () => {
         <Grid container spacing={1} sx={{ marginBottom: 3 }}>
           {[0, 1, 2, 3, 4, 6].map((run) => (
             <Grid item xs={4} sm={2} key={run}>
-              <Button variant="contained" size="large" fullWidth onClick={() => handleScoreRuns(run)} sx={{ height: 60, fontSize: '1.2rem', backgroundColor: run===4?'#0288d1':run===6?'#9c27b0':'' }}>
-                {run}
-              </Button>
+              <Button variant="contained" size="large" fullWidth onClick={() => handleScoreRuns(run)} sx={{ height: 60, fontSize: '1.2rem', backgroundColor: run===4?'#0288d1':run===6?'#9c27b0':'' }}>{run}</Button>
             </Grid>
           ))}
         </Grid>
@@ -266,11 +278,10 @@ const LiveScorecard = () => {
           <Grid item xs={3}><Button variant="outlined" color="warning" fullWidth onClick={() => dispatch(changeStrike())}>Swap</Button></Grid>
           <Grid item xs={3}><Button variant="outlined" color="info" fullWidth onClick={() => setExtrasModalOpen(true)}>Extra</Button></Grid>
           <Grid item xs={3}><Button variant="outlined" color="success" fullWidth onClick={() => { setWicketType('retiredNotOut'); setPlayerOutId(striker.id); setWicketModalOpen(true); }}>Retire</Button></Grid>
-          <Grid item xs={3}><Button variant="contained" color="error" fullWidth onClick={() => { setWicketType('bowled'); setPlayerOutId(striker.id); setWicketModalOpen(true); }}>Wicket</Button></Grid>
+          <Grid item xs={3}><Button variant="contained" color="error" fullWidth onClick={() => { setWicketType('bowled'); setRunOutRuns(0); setPlayerOutId(striker.id); setWicketModalOpen(true); }}>Wicket</Button></Grid>
         </Grid>
       </Paper>
 
-      {/* NEW: Bottom Live Tables */}
       <Typography variant="h6" sx={{ mt: 4, mb: 1 }}>Innings Batting</Typography>
       <TableContainer component={Paper} sx={{ mb: 3 }}>
         <Table size="small">
@@ -297,7 +308,7 @@ const LiveScorecard = () => {
         </Table>
       </TableContainer>
 
-      {/* MODALS */}
+      {/* WICKET MODAL */}
       <Dialog open={wicketModalOpen} onClose={() => setWicketModalOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>{wicketType === 'retiredNotOut' ? 'Retire Batsman' : 'Record Wicket'}</DialogTitle>
         <DialogContent>
@@ -305,14 +316,13 @@ const LiveScorecard = () => {
             <TextField select fullWidth label="Wicket Type" value={wicketType} onChange={(e) => setWicketType(e.target.value)} sx={{ mt: 2, mb: 2 }}>
               <MenuItem value="bowled">Bowled</MenuItem>
               <MenuItem value="caught">Caught</MenuItem>
-              <MenuItem value="runOut">Run Out</MenuItem>
+              <MenuItem value="runOut">Run Out (Run + Wicket)</MenuItem>
               <MenuItem value="stumped">Stumped</MenuItem>
             </TextField>
           )}
 
-          {/* NEW: Run Out Added Runs */}
-          {(wicketType === 'runOut' || wicketType === 'stumped') && (
-            <TextField fullWidth type="number" label="Runs Completed Before Wicket" value={runOutRuns} onChange={(e) => setRunOutRuns(e.target.value)} sx={{ mb: 2 }} helperText="e.g. They ran 1 run, but got run out on the 2nd." />
+          {wicketType === 'runOut' && (
+            <TextField fullWidth type="number" label="Runs Completed Before Wicket" value={runOutRuns} onChange={(e) => setRunOutRuns(e.target.value)} sx={{ mb: 2 }} helperText="If they ran 1 and got out on the 2nd, enter 1." />
           )}
 
           <TextField select fullWidth label={wicketType === 'retiredNotOut' ? 'Who is Retiring?' : 'Who is Out?'} value={playerOutId} onChange={(e) => setPlayerOutId(e.target.value)} sx={{ mb: 2, mt: wicketType === 'retiredNotOut' ? 2 : 0 }}>
@@ -370,7 +380,6 @@ const LiveScorecard = () => {
         <DialogContent>
           <Typography variant="h5" align="center" sx={{ mt: 2, mb: 2 }}>Final Score: {totalRuns} - {totalWickets}</Typography>
           <Typography variant="body1" align="center" color="text.secondary">
-             {/* THE FIX: Show actual team names for the win instead of "Bowling/Batting Team" */}
             {currentInnings === 1 
               ? (isAllOut ? 'The team has been bowled out.' : 'All assigned overs have been bowled.')
               : (isTargetReached ? `${battingTeam.name} wins the match!` : (totalRuns === targetScore - 1 ? 'Match Tied!' : `${bowlingTeam.name} wins the match!`))
