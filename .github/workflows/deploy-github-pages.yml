@@ -21,16 +21,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      
+      # FIX 1: Bumped Node to 22 to clear deprecation warnings
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22' 
           cache: npm
           cache-dependency-path: sportathon-scorecard/package-lock.json
+          
+      # FIX 2: Added the missing configure-pages setup step
+      - name: Setup Pages
+        uses: actions/configure-pages@v5 
+        
       - name: Install and build
         working-directory: sportathon-scorecard
         run: |
           npm ci
           npm run build
+          
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
