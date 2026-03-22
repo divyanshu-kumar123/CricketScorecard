@@ -94,7 +94,7 @@ const PlayerRegistration = () => {
   );
 
   return (
-    <Box sx={{ padding: 4, maxWidth: 900, margin: '0 auto' }}>
+    <Box className="app-page">
       <Typography variant="h4" gutterBottom>Player Registration</Typography>
       {error && <Alert severity="error" sx={{ marginBottom: 3 }}>{error}</Alert>}
       {renderTeamForm(teamA.name, rosterA, 'A')}

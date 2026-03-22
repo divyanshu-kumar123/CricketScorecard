@@ -1,0 +1,195 @@
+/* Global Sportathon theme — backgrounds, tokens, portaled menus (logic-agnostic) */
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@500;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-display: 'Bebas Neue', Impact, sans-serif;
+  --font-ui: 'Outfit', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --lsc-bg-deep: #050a12;
+  --lsc-bg-panel: rgba(12, 24, 42, 0.85);
+  --lsc-border: rgba(212, 175, 55, 0.35);
+  --lsc-gold: #d4af37;
+  --lsc-gold-dim: rgba(212, 175, 55, 0.15);
+  --lsc-led-green: #39ff14;
+  --lsc-led-amber: #ffc107;
+  --lsc-text: #e8edf5;
+  --lsc-muted: #8b9cb3;
+  --lsc-danger: #ff4757;
+  --lsc-four: #00b4d8;
+  --lsc-six: #c77dff;
+  --lsc-radius: 14px;
+  --lsc-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+}
+
+.app-shell-header {
+  margin-bottom: 1.5rem;
+}
+
+/* Standard page width — matches stadium UI */
+.app-page {
+  width: 100%;
+  max-width: min(960px, 100%);
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem);
+  padding-bottom: 3rem;
+  box-sizing: border-box;
+}
+
+.app-page--narrow {
+  max-width: min(640px, 100%);
+}
+
+.app-page--wide {
+  max-width: min(1200px, 100%);
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--lsc-bg-deep);
+  color: var(--lsc-text);
+}
+
+/* Full-app backdrop (same family as live scoreboard) */
+.app-shell {
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.app-shell::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(30, 80, 120, 0.35), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 100% 50%, rgba(212, 175, 55, 0.06), transparent 45%),
+    radial-gradient(ellipse 80% 50% at 0% 80%, rgba(57, 255, 20, 0.04), transparent 40%),
+    linear-gradient(180deg, #0a1628 0%, var(--lsc-bg-deep) 45%, #030508 100%);
+}
+
+.app-shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.app-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Match summary — result hero */
+.app-result-banner {
+  border-radius: var(--lsc-radius) !important;
+  border: 1px solid rgba(76, 175, 80, 0.45) !important;
+  background: linear-gradient(135deg, rgba(27, 94, 32, 0.95), rgba(13, 61, 20, 0.98)) !important;
+  color: #ffffff !important;
+  box-shadow: var(--lsc-shadow);
+}
+
+/* PersistGate loader */
+.app-loader-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #0a1628 0%, var(--lsc-bg-deep) 50%, #030508 100%);
+}
+
+/* Portaled <Select> menus — class from theme MuiTextField.defaultProps */
+.lsc-menu-paper {
+  background: linear-gradient(165deg, #122038, #0a1424) !important;
+  border: 1px solid var(--lsc-border) !important;
+  color: #ffffff !important;
+}
+
+.lsc-menu-paper .MuiMenuItem-root {
+  color: #ffffff !important;
+}
+
+.lsc-menu-paper .MuiMenuItem-root:hover,
+.lsc-menu-paper .MuiMenuItem-root.Mui-selected {
+  background-color: rgba(212, 175, 55, 0.15) !important;
+}
+
+.lsc-menu-paper .MuiMenuItem-root.Mui-selected {
+  color: #ffffff !important;
+}
+
+/* Shared modals (header reset, live score, etc.) */
+.lsc-dialog-paper {
+  border-radius: 16px !important;
+  border: 1px solid var(--lsc-border) !important;
+  background: linear-gradient(165deg, #122038, #0a1424) !important;
+  color: var(--lsc-text) !important;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65) !important;
+}
+
+.lsc-dialog-paper .MuiDialogTitle-root {
+  font-family: var(--font-display);
+  font-size: 1.75rem !important;
+  letter-spacing: 0.06em;
+  color: #ffffff !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 1rem !important;
+}
+
+.lsc-dialog-paper .MuiDialogContent-root .MuiFormLabel-root,
+.lsc-dialog-paper .MuiDialogContent-root .MuiInputLabel-root {
+  color: var(--lsc-muted) !important;
+}
+
+.lsc-dialog-paper .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.lsc-dialog-paper .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: var(--lsc-gold) !important;
+}
+
+.lsc-dialog-paper .MuiDialogActions-root {
+  padding: 1rem 1.5rem 1.5rem !important;
+  gap: 0.5rem;
+}
+
+.lsc-dialog-paper .MuiTypography-root:not(.MuiTypography-colorError) {
+  color: #ffffff !important;
+}
+
+.lsc-dialog-paper .MuiTypography-colorTextSecondary {
+  color: var(--lsc-muted) !important;
+}
+
+.lsc-dialog-paper .MuiTypography-colorError {
+  color: var(--lsc-danger) !important;
+}
+
+.lsc-dialog-paper .MuiInputBase-input,
+.lsc-dialog-paper .MuiSelect-select,
+.lsc-dialog-paper .MuiNativeSelect-select {
+  color: #ffffff !important;
+}
+
+.lsc-dialog-paper .MuiFormHelperText-root {
+  color: var(--lsc-muted) !important;
+}
+
+.lsc-dialog-paper .MuiSvgIcon-root {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.lsc-dialog-paper .MuiButton-text {
+  color: rgba(255, 255, 255, 0.92) !important;
+}

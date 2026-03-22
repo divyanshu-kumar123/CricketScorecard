@@ -9,7 +9,7 @@ import MatchSummary from './pages/MatchSummary';
 
 function App() {
   return (
-    <>
+    <div className="app-shell">
       <GlobalHeader /> {/* RENDER ON EVERY PAGE */}
       <Routes>
         <Route path="/" element={<MatchSetup />} />
@@ -19,7 +19,7 @@ function App() {
         <Route path="/live-score" element={<LiveScorecard />} />
         <Route path="/match-summary" element={<MatchSummary />} />
       </Routes>
-    </>
+    </div>
   );
 }
 

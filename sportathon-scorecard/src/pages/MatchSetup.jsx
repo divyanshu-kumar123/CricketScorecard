@@ -16,7 +16,7 @@ const MatchSetup = () => {
     dispatch(resetEvents());
   }, [dispatch]);
 
-  const [matchName, setMatchName] = useState('Sportathon Final');
+  const [matchName, setMatchName] = useState('Match 1');
   const [overs, setOvers] = useState(4);
   const [playersPerTeam, setPlayersPerTeam] = useState(5);
   const [specialPlayers, setSpecialPlayers] = useState(1);
@@ -41,7 +41,7 @@ const MatchSetup = () => {
   };
 
   return (
-    <Box sx={{ padding: 4, maxWidth: 800, margin: '0 auto' }}>
+    <Box className="app-page">
       <Typography variant="h4" gutterBottom>Match Setup</Typography>
       
       <Paper sx={{ padding: 3, marginBottom: 3 }}>

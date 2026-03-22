@@ -1,4 +1,4 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   currentInnings: 1,
@@ -11,7 +11,7 @@ const initialState = {
 };
 
 const inningsSlice = createSlice({
-  name: 'innings',
+  name: "innings",
   initialState,
   reducers: {
     setInningsTeams: (state, action) => {
@@ -47,18 +47,30 @@ const inningsSlice = createSlice({
     startNextInnings: (state) => {
       state.currentInnings = 2;
       state.currentOver = 0;
-      
+
       const tempTeam = state.battingTeamId;
       state.battingTeamId = state.bowlingTeamId;
       state.bowlingTeamId = tempTeam;
-      
+
       state.strikerId = null;
       state.nonStrikerId = null;
       state.bowlerId = null;
+    },
+    changeCurrentBowler: (state, action) => {
+      state.bowlerId = action.payload.newBowlerId;
     },
     resetInnings: () => initialState,
   },
 });
 
-export const { setInningsTeams, setActivePlayers, changeStrike, changeBatter, startNextOver, startNextInnings, resetInnings } = inningsSlice.actions;
+export const {
+  setInningsTeams,
+  setActivePlayers,
+  changeStrike,
+  changeBatter,
+  startNextOver,
+  startNextInnings,
+  resetInnings,
+  changeCurrentBowler
+} = inningsSlice.actions;
 export default inningsSlice.reducer;

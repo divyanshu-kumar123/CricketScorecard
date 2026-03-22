@@ -1,0 +1,743 @@
+/* Live scoreboard — page-specific panels (tokens + app backdrop: src/styles/appTheme.css) */
+
+/* ---- Page shell ---- */
+.live-scorecard {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
+  padding-bottom: 3rem;
+  box-sizing: border-box;
+  font-family: var(--font-ui);
+  color: var(--lsc-text);
+  background: transparent;
+  overflow-x: hidden;
+}
+
+/*
+ * MUI + Emotion inject `.css-*-MuiTypography-root { color: rgba(0,0,0,.87) }`
+ * which wins over `inherit`. Force light text, then re-apply semantic `.lsc-*` colors.
+ */
+.live-scorecard .MuiTypography-root:not(.MuiTypography-colorError):not(.MuiTypography-colorTextSecondary) {
+  color: #ffffff !important;
+}
+
+.live-scorecard .MuiTypography-colorTextSecondary {
+  color: var(--lsc-muted) !important;
+}
+
+.live-scorecard .MuiTypography-colorError {
+  color: var(--lsc-danger) !important;
+}
+
+/* Named scoreboard text (must beat the white rule above) */
+.live-scorecard .MuiTypography-root.lsc-hero-title,
+.lsc-hero-title {
+  color: var(--lsc-text) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-hero-sub,
+.lsc-hero-sub {
+  color: var(--lsc-gold) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-score-main,
+.lsc-score-main {
+  color: var(--lsc-led-green) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-score-sep,
+.lsc-score-sep {
+  color: var(--lsc-muted) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-overs-line,
+.lsc-overs-line {
+  color: var(--lsc-text) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-target-banner,
+.lsc-target-banner {
+  color: var(--lsc-led-amber) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-over-label,
+.lsc-over-label {
+  color: var(--lsc-muted) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-waiting,
+.lsc-waiting {
+  color: var(--lsc-muted) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-name,
+.lsc-name {
+  color: #ffffff !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-fig,
+.lsc-fig {
+  color: var(--lsc-led-amber) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-table-section-title,
+.lsc-table-section-title {
+  color: var(--lsc-text) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-controls-title,
+.lsc-controls-title {
+  color: var(--lsc-gold) !important;
+}
+
+/* Non-striker names stay muted even with .lsc-name */
+.live-scorecard .MuiTypography-root.lsc-name.MuiTypography-colorTextSecondary {
+  color: var(--lsc-muted) !important;
+}
+
+/* Other MUI text on the page */
+.live-scorecard .MuiTableCell-root {
+  color: #ffffff !important;
+}
+
+.live-scorecard .lsc-action-btn.MuiButton-outlined {
+  color: #ffffff !important;
+}
+
+.live-scorecard .lsc-loading .MuiTypography-root {
+  color: var(--lsc-muted) !important;
+}
+
+.lsc-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: min(1920px, 100%);
+  margin: 0 auto;
+}
+
+/* ---- Loading ---- */
+.lsc-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  font-size: 1.25rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lsc-muted);
+  animation: lsc-pulse-soft 1.5s ease-in-out infinite;
+}
+
+@keyframes lsc-pulse-soft {
+  0%,
+  100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ---- Hero / LED board ---- */
+.live-scorecard .MuiPaper-root.lsc-hero {
+  background: linear-gradient(145deg, rgba(8, 22, 40, 0.95) 0%, rgba(4, 12, 28, 0.98) 100%) !important;
+  color: var(--lsc-text) !important;
+}
+
+.lsc-hero {
+  position: relative;
+  margin-bottom: clamp(1rem, 2.5vw, 1.75rem);
+  padding: clamp(1.25rem, 3vw, 2rem) clamp(1rem, 3vw, 2.5rem);
+  border-radius: var(--lsc-radius);
+  border: 1px solid var(--lsc-border);
+  background:
+    linear-gradient(145deg, rgba(8, 22, 40, 0.95) 0%, rgba(4, 12, 28, 0.98) 100%);
+  box-shadow:
+    var(--lsc-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 0 60px rgba(57, 255, 20, 0.06);
+  overflow: hidden;
+}
+
+.lsc-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.12) 2px,
+    rgba(0, 0, 0, 0.12) 4px
+  );
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Main score block (left) + batters/bowler stack (right, top-aligned) */
+.lsc-hero-layout {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+}
+
+.lsc-hero-main {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.lsc-players-row {
+  flex: 0 1 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  width: 100%;
+  max-width: 340px;
+  margin: 0;
+  align-self: flex-start;
+}
+
+.lsc-hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.lsc-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, #c62828, #8e0000);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 20px rgba(198, 40, 40, 0.55);
+  animation: lsc-live-glow 2s ease-in-out infinite;
+}
+
+.lsc-live-pill::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  animation: lsc-blink 1s step-end infinite;
+}
+
+@keyframes lsc-blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes lsc-live-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(198, 40, 40, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(255, 80, 80, 0.65);
+  }
+}
+
+.lsc-match-meta {
+  font-size: 0.85rem;
+  color: var(--lsc-muted);
+  letter-spacing: 0.02em;
+}
+
+.lsc-hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+  margin: 0 0 0.75rem;
+  color: var(--lsc-text);
+  text-shadow: 0 0 40px rgba(212, 175, 55, 0.2);
+}
+
+.lsc-hero-sub {
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  color: var(--lsc-gold);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 1.25rem;
+  opacity: 0.95;
+}
+
+.lsc-score-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: clamp(0.5rem, 2vw, 1.5rem);
+  margin-bottom: 0.75rem;
+}
+
+.lsc-score-main {
+  font-family: var(--font-mono);
+  font-size: clamp(3rem, 10vw, 5.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--lsc-led-green);
+  text-shadow:
+    0 0 20px rgba(57, 255, 20, 0.45),
+    0 0 60px rgba(57, 255, 20, 0.2);
+  animation: lsc-score-tick 0.6s ease-out;
+}
+
+@keyframes lsc-score-tick {
+  from {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.lsc-score-sep {
+  font-family: var(--font-mono);
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  color: var(--lsc-muted);
+  font-weight: 500;
+}
+
+.lsc-overs-line {
+  font-family: var(--font-mono);
+  font-size: clamp(1rem, 2.5vw, 1.35rem);
+  color: var(--lsc-text);
+  letter-spacing: 0.04em;
+}
+
+.lsc-target-banner {
+  margin-top: 1rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 193, 7, 0.45);
+  background: linear-gradient(90deg, rgba(255, 193, 7, 0.12), rgba(255, 152, 0, 0.08));
+  font-family: var(--font-mono);
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  font-weight: 600;
+  color: var(--lsc-led-amber);
+  text-align: center;
+  text-shadow: 0 0 24px rgba(255, 193, 7, 0.35);
+  animation: lsc-banner-in 0.5s ease-out;
+}
+
+@keyframes lsc-banner-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- Current over strip ---- */
+.live-scorecard .MuiPaper-root.lsc-over-panel {
+  background: var(--lsc-bg-panel) !important;
+  color: var(--lsc-text) !important;
+}
+
+.lsc-over-panel {
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  padding: clamp(1rem, 2vw, 1.35rem);
+  border-radius: var(--lsc-radius);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--lsc-bg-panel);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--lsc-shadow);
+}
+
+/* Score controls (left) + full over history (right) on wide screens */
+.lsc-controls-over-row {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+}
+
+.lsc-controls-over-row .lsc-controls,
+.lsc-controls-over-row .lsc-over-panel {
+  margin-bottom: 0;
+}
+
+@media (min-width: 900px) {
+  .lsc-controls-over-row {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .lsc-controls-over-row .lsc-controls {
+    flex: 1 1 40%;
+    min-width: 0;
+  }
+
+  .lsc-controls-over-row .lsc-over-panel {
+    flex: 1 1 60%;
+    min-width: 0;
+  }
+}
+
+.lsc-over-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--lsc-muted);
+  margin-bottom: 0.75rem;
+}
+
+.lsc-ball-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.25rem 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--lsc-gold) transparent;
+}
+
+.lsc-ball-strip::-webkit-scrollbar {
+  height: 6px;
+}
+
+.lsc-ball-strip::-webkit-scrollbar-thumb {
+  background: var(--lsc-gold-dim);
+  border-radius: 99px;
+}
+
+.lsc-ball-chip {
+  flex-shrink: 0;
+  width: 42px !important;
+  height: 42px !important;
+  font-size: 0.75rem !important;
+  font-family: var(--font-mono);
+  font-weight: 700 !important;
+  border: 2px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  animation: lsc-ball-pop 0.35s ease-out;
+}
+
+.lsc-ball-chip:hover {
+  transform: scale(1.08);
+  z-index: 1;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes lsc-ball-pop {
+  from {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.lsc-waiting {
+  font-size: 0.9rem;
+  color: var(--lsc-muted);
+  font-style: italic;
+}
+
+/* ---- Player cards ---- */
+.lsc-player-card {
+  height: auto;
+  padding: clamp(1rem, 2vw, 1.35rem) !important;
+  border-radius: var(--lsc-radius) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  background: var(--lsc-bg-panel) !important;
+  backdrop-filter: blur(10px);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.lsc-player-card:hover {
+  border-color: var(--lsc-border) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* Compact bowler strip (single row) — sits under batters in hero column */
+.lsc-player-card--bowler {
+  padding: 0.55rem 0.75rem 0.65rem !important;
+}
+
+.lsc-player-card--bowler .lsc-card-head {
+  font-size: 1.05rem !important;
+  margin-bottom: 0.25rem !important;
+  padding-right: 4.5rem;
+  line-height: 1.2;
+}
+
+.lsc-player-card--bowler .lsc-stat-line {
+  padding: 0.1rem 0;
+}
+
+.lsc-player-card--bowler .lsc-name,
+.lsc-player-card--bowler .lsc-fig {
+  font-size: 0.95rem;
+}
+
+.lsc-card-head {
+  font-family: var(--font-display);
+  font-size: 1.5rem !important;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-card-head--bat,
+.lsc-card-head--bat {
+  color: var(--lsc-four) !important;
+}
+
+.live-scorecard .MuiTypography-root.lsc-card-head--bowl,
+.lsc-card-head--bowl {
+  color: #ff9e80 !important;
+}
+
+.lsc-stat-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0;
+}
+
+.lsc-stat-line--striker .lsc-name {
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+.lsc-strike {
+  display: inline-block;
+  color: var(--lsc-led-green);
+  margin-right: 0.35rem;
+  animation: lsc-pulse-soft 1.2s ease-in-out infinite;
+}
+
+.lsc-name {
+  letter-spacing: 0.02em;
+}
+
+.lsc-fig {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--lsc-led-amber);
+}
+
+/* ---- Scoring controls ---- */
+.live-scorecard .MuiPaper-root.lsc-controls {
+  background: linear-gradient(160deg, rgba(18, 32, 52, 0.95), rgba(8, 16, 32, 0.98)) !important;
+  color: var(--lsc-text) !important;
+}
+
+.lsc-controls {
+  margin-bottom: clamp(1rem, 2vw, 1.5rem);
+  padding: clamp(1.25rem, 2.5vw, 1.75rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--lsc-radius);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  background: linear-gradient(160deg, rgba(18, 32, 52, 0.95), rgba(8, 16, 32, 0.98));
+  box-shadow: var(--lsc-shadow);
+}
+
+.lsc-controls-title {
+  font-family: var(--font-display);
+  font-size: 1.65rem !important;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem !important;
+  color: var(--lsc-gold) !important;
+}
+
+.lsc-run-grid {
+  margin-bottom: 1rem !important;
+}
+
+.lsc-run-btn {
+  height: 64px !important;
+  font-family: var(--font-mono) !important;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  border-radius: 12px !important;
+  border: 2px solid rgba(255, 255, 255, 0.12) !important;
+  background: linear-gradient(180deg, rgba(40, 60, 90, 0.9), rgba(20, 35, 55, 0.95)) !important;
+  color: #fff !important;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    filter 0.2s ease !important;
+}
+
+.lsc-run-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.lsc-run-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.lsc-run-btn--four {
+  background: linear-gradient(180deg, #0891b2, #0e7490) !important;
+  border-color: rgba(56, 189, 248, 0.5) !important;
+}
+
+.lsc-run-btn--six {
+  background: linear-gradient(180deg, #7c3aed, #5b21b6) !important;
+  border-color: rgba(196, 181, 253, 0.45) !important;
+}
+
+.lsc-divider-gold {
+  margin: 1.25rem 0 !important;
+  border-color: rgba(212, 175, 55, 0.25) !important;
+}
+
+.lsc-actions-grid {
+  margin-top: 0.5rem;
+}
+
+.lsc-action-btn {
+  min-height: 48px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em !important;
+  border-radius: 10px !important;
+  border-width: 2px !important;
+  text-transform: none !important;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.2s ease !important;
+}
+
+.lsc-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ---- Tables ---- */
+.lsc-table-section-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem !important;
+  letter-spacing: 0.08em;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.65rem !important;
+  color: var(--lsc-text) !important;
+}
+
+.lsc-table-wrap {
+  margin-bottom: 1.25rem !important;
+  border-radius: var(--lsc-radius) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  overflow: hidden !important;
+  background: var(--lsc-bg-panel) !important;
+  backdrop-filter: blur(8px);
+}
+
+.live-scorecard .lsc-table-wrap .MuiTableHead-root .MuiTableCell-head {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--lsc-gold) !important;
+  background: linear-gradient(180deg, rgba(30, 45, 70, 0.95), rgba(18, 28, 48, 0.98)) !important;
+  border-bottom: 1px solid var(--lsc-border) !important;
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.live-scorecard .lsc-table-wrap .MuiTableBody-root .MuiTableCell-body {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  border-color: rgba(255, 255, 255, 0.06) !important;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.live-scorecard .lsc-table-wrap .MuiTableBody-root .MuiTableRow-root {
+  transition: background 0.2s ease;
+}
+
+.live-scorecard .lsc-table-wrap .MuiTableBody-root .MuiTableRow-root:nth-child(even) {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.live-scorecard .lsc-table-wrap .MuiTableBody-root .MuiTableRow-root:hover {
+  background: rgba(212, 175, 55, 0.08) !important;
+}
+
+.live-scorecard .lsc-table-wrap .MuiTableBody-root .MuiTableCell-body:first-of-type {
+  font-family: var(--font-ui);
+  font-weight: 500;
+}
+
+/* Dialog paper: src/styles/appTheme.css (.lsc-dialog-paper) */
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .lsc-hero-layout {
+    flex-direction: column;
+  }
+
+  .lsc-players-row {
+    flex: 1 1 auto;
+    max-width: none;
+    width: 100%;
+  }
+}
+
+@media (max-width: 600px) {
+  .lsc-hero-top {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lsc-run-btn {
+    height: 56px !important;
+    font-size: 1.35rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

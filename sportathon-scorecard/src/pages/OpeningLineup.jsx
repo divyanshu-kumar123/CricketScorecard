@@ -75,10 +75,16 @@ const OpeningLineup = () => {
     navigate('/live-score');
   };
 
-  if (!battingTeam || !bowlingTeam) return <Typography>Loading Lineup...</Typography>;
+  if (!battingTeam || !bowlingTeam) {
+    return (
+      <Box className="app-page app-page--narrow">
+        <Typography color="text.secondary">Loading Lineup...</Typography>
+      </Box>
+    );
+  }
 
   return (
-    <Box sx={{ padding: 4, maxWidth: 600, margin: '0 auto' }}>
+    <Box className="app-page app-page--narrow">
       <Typography variant="h4" gutterBottom textAlign="center">Opening Lineup</Typography>
       
       {error && <Alert severity="error" sx={{ marginBottom: 3 }}>{error}</Alert>}

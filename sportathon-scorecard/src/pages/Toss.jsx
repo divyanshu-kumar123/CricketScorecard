@@ -39,7 +39,7 @@ const Toss = () => {
   };
 
   return (
-    <Box sx={{ padding: 4, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+    <Box className="app-page app-page--narrow" sx={{ textAlign: 'center' }}>
       <Typography variant="h4" gutterBottom>The Toss</Typography>
 
       {error && <Alert severity="error" sx={{ marginBottom: 3 }}>{error}</Alert>}

@@ -21,18 +21,27 @@ const GlobalHeader = () => {
 
   return (
     <>
-      <AppBar position="static" sx={{ backgroundColor: '#160cc9', mb: 3 }}>
+      <AppBar position="static" className="app-shell-header" elevation={0}>
         <Toolbar sx={{ justifyContent: 'space-between' }}>
-          <Typography variant="h6" fontWeight="bold" sx={{ color: '#fff' }}>
+          <Typography variant="h6" fontWeight="bold" sx={{ letterSpacing: '0.06em' }}>
             🏆 Sportathon Scorer
           </Typography>
-          <Button variant="outlined" color="white" onClick={() => setOpenDialog(true)}>
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={() => setOpenDialog(true)}
+            sx={{
+              borderColor: 'rgba(255,255,255,0.45)',
+              color: '#fff',
+              '&:hover': { borderColor: '#d4af37', backgroundColor: 'rgba(212, 175, 55, 0.12)' },
+            }}
+          >
             Start New Match
           </Button>
         </Toolbar>
       </AppBar>
 
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} PaperProps={{ className: 'lsc-dialog-paper' }}>
         <DialogTitle>⚠️ Warning: Reset Match?</DialogTitle>
         <DialogContent>
           Are you sure you want to exit and start a new match? This will result in the permanent loss of ALL data for the current match.
