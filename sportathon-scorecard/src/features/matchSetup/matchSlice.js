@@ -10,9 +10,9 @@ const initialState = {
     date: null,
   },
   specialRules: {
-    specialPlayerMultiplier: 2,
-    mandatoryFirstOverBat: true,
-    mandatoryFirstOverBowl: true,
+    specialPlayerMultiplier: 1,
+    mandatoryFirstOverBat: false,
+    mandatoryFirstOverBowl: false,
   },
   teamA: { id: 'team_a', name: '', players: [] },
   teamB: { id: 'team_b', name: '', players: [] },
